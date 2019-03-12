@@ -1,0 +1,23 @@
+{
+  "name": "retrobrew",
+  "version": "1.0.0",
+  "description": "",
+  "main": "alu.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chriswa/retrobrew.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/chriswa/retrobrew/issues"
+  },
+  "homepage": "https://github.com/chriswa/retrobrew#readme",
+  "dependencies": {
+    "minimist": "^1.2.0",
+    "serialport": "^7.1.4"
+  }
+}
