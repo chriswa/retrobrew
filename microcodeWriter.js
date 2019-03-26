@@ -33,7 +33,7 @@ function writeMicrocode(chipIndex, controlRoms) {
 		else {
 			byte = microcode.getInactiveControlSignals()[romIndex]
 		}
-		console.log(`${leftPad(address.toString(16), 4)} := ${leftPad(byte.toString(2), 8)}`)
+		//console.log(`${leftPad(address.toString(16), 4)} := ${leftPad(byte.toString(2), 8)}`)
 		romWriter.write(address, byte)
 	}
 }
@@ -85,7 +85,7 @@ function buildInstruction(controlRoms, comment, instructionId, flags, controlSig
 function buildInstructionStep(controlRoms, comment, instructionId, flags, stepIndex, controlSignals) {
 	let address = 0
 	for (let instructionBit = 0; instructionBit <= 7; instructionBit += 1) {
-		address |= moveBit(instructionId, instructionBit, 7 - instructionBit)
+		address |= moveBit(instructionId, instructionBit, instructionBit)
 	}
 	address |= moveBit(stepIndex, 0, 13)
 	address |= moveBit(stepIndex, 1, 8)
@@ -105,5 +105,5 @@ function buildInstructionStep(controlRoms, comment, instructionId, flags, stepIn
 		if (!signal) { throw new Error(`Unknown signalName '${signalName}'`) }
 		controlRoms[address][signal.romIndex] ^= moveBit(1, 0, signal.bitIndex) // XOR should be fine unless user specifies the same signal twice in one microcode step!
 	})
-	console.log(`${util.leftPad(address.toString(16), 4)} : ${controlRoms[address].map(n => util.leftPad(n.toString(2), 8)).join(' | ')} // ${comment}`)
+	//console.log(`${util.leftPad(address.toString(16), 4)} : ${controlRoms[address].map(n => util.leftPad(n.toString(2), 8)).join(' | ')} // ${comment}`)
 }

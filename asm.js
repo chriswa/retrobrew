@@ -1,5 +1,6 @@
 const aluOperations = require('./alu.js')
 const microcode = require('./microcode.js')
+const util = require('./util.js')
 
 for (let instructionName in microcode.Instructions) {
 	const instruction = microcode.Instructions[instructionName]
@@ -18,12 +19,15 @@ for (let instructionName in microcode.Instructions) {
 }
 
 const machineCode = global['machineCode'] = []
+const sourceMap = []
 
 function declareFunction(functionName, argCount, instructionCode) {
+	//console.log(functionName)
 	global[functionName] = (...args) => {
 		if (args.length !== argCount) {
 			throw new Error(`${functionName} accepts exactly ${argCount} argument(s)`)
 		}
+		sourceMap.push({ addr: machineCode.length, functionName, argCount })
 		machineCode.push(instructionCode, ...args)
 	}
 }
@@ -45,7 +49,19 @@ global['compile'] = () => {
 		if (machineCode[addr] instanceof Label) {
 			machineCode[addr] = machineCode[addr].resolve()
 		}
+		else if (typeof(machineCode[addr]) === 'string') {
+			machineCode[addr] = machineCode[addr].charCodeAt(0)
+		}
 	}
+	console.log(`SourceMap:`)
+	let sourceMapContent = ''
+	sourceMap.forEach(({ addr, functionName, argCount }) => {
+		const values = machineCode.slice(addr, addr + argCount + 1)
+		const addrDisplay = (0x8000 + addr).toString(16)
+		const valuesDisplay = values.map(n => util.leftPad(n.toString(16), 2)).join(' ')
+		sourceMapContent += `${addrDisplay} : ${util.rightPad(valuesDisplay, 10, ' ')} // ${functionName}\n`
+	})
+	console.log(sourceMapContent)
 }
 
 function determineArgumentCountFromInstructionSignals(signals) {

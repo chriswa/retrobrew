@@ -1,0 +1,16 @@
+{
+  "name": "retroprogrammer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@serialport/parser-byte-length": "^2.0.2",
+    "@serialport/parser-readline": "^2.0.2",
+    "serialport": "^7.1.4"
+  }
+}

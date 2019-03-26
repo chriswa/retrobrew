@@ -3,12 +3,29 @@ const argv = require('minimist')(process.argv.slice(2))
 const aluOperations = require('./alu.js')
 const romWriter = require('./romWriter.js')
 
+const MAX_ALU_OPERATIONS = 16
+
 const aluOperationsByOpIndex = {}
 for (const name in aluOperations) {
 	const op = aluOperations[name]
 	if (aluOperationsByOpIndex[op.opIndex]) { throw new Error(`Logic Error! Conflicting ALU opIndex ${op.opIndex}`) }
 	aluOperationsByOpIndex[op.opIndex] = { name, ...op }
 }
+
+
+/*
+let bus, carry, zero;
+[bus, carry, zero] = nibbleMath(1, 0x8, 0x8, 0, false);
+console.log(`low nibble, carryIn=0 -> BUS=${bus} carry=${carry} zero?${zero}`);
+[bus, carry, zero] = nibbleMath(1, 0x8, 0x8, 1, false);
+console.log(`low nibble, carryIn=1 -> BUS=${bus} carry=${carry} zero?${zero}`);
+[bus, carry, zero] = nibbleMath(1, 0x8, 0x8, 0, true);
+console.log(`high nibble, carryIn=0 -> BUS=${bus} carry=${carry} zero?${zero}`);
+[bus, carry, zero] = nibbleMath(1, 0x8, 0x8, 1, true);
+console.log(`high nibble, carryIn=1 -> BUS=${bus} carry=${carry} zero?${zero}`);
+process.exit();
+*/
+
 
 const chipIndex = argv.chip
 if (chipIndex === undefined) {
@@ -33,9 +50,12 @@ function wipeRom(addr0, addr1, value) {
 function writeAlu(isHighNibbleChip) {
 	const moveBit = util.moveBit
 	//const collisionMap = []
-	for (let op = 0; op <= 5; op += 1) {
+	for (let op = 0; op < MAX_ALU_OPERATIONS; op += 1) {
+		//if (op !== 1) { continue }
 		for (let a = 0; a <= 0xf; a += 1) {
+			//if (a !== 8) { continue }
 			for (let b = 0; b <= 0xf; b += 1) {
+				//if (b !== 8) { continue }
 				for (let carryIn = 0; carryIn <= 1; carryIn += 1) {
 
 					/*
@@ -50,7 +70,7 @@ function writeAlu(isHighNibbleChip) {
 
 					// PROPER BIT POSITIONS
 					let address = a
-					address = address | moveBit(b, 0, 13) | moveBit(b, 1, 8) | moveBit(b, 2, 9) | moveBit(b, 3, 12)
+					address = address | moveBit(b, 0, 13) | moveBit(b, 1, 8) | moveBit(b, 2, 9) | moveBit(b, 3, 11)
 					address = address | moveBit(op, 0, 4) | moveBit(op, 1, 5) | moveBit(op, 2, 6) | moveBit(op, 3, 7) | moveBit(op, 4, 12) | moveBit(op, 5, 14)
 					address = address | moveBit(carryIn, 0, 10)
 
@@ -61,6 +81,8 @@ function writeAlu(isHighNibbleChip) {
 					const [busOut, carryOut, zeroOut] = nibbleMath(op, a, b, carryIn, isHighNibbleChip)
 
 					const value = busOut | (zeroOut << 6) | (carryOut << 7)
+
+					//console.log(`${util.leftPad(address.toString(16), 4)} := ${util.leftPad(value.toString(16), 2)}`)
 
 					romWriter.write(address, value)
 
@@ -77,9 +99,10 @@ function nibbleMath(opIndex, a, b, carryIn, isHighNibbleChip) {
 		carry: 0,
 	}
 	const operation = aluOperationsByOpIndex[opIndex]
-	if (!operation) { throw new Error(`Logic Error! Unimplemented ALU opIndex ${opIndex}`) }
-	operation.math(a, b, carryIn, isHighNibbleChip, out)
-	if (out.result >= 0x10) { out.result -= 0x10; out.carry = 1 }
+	if (operation) {
+		operation.math(a, b, carryIn, isHighNibbleChip, out)
+		if (out.result >= 0x10) { out.result -= 0x10; out.carry = 1 }
+	}
 	const zeroOut = out.result === 0
 	return [out.result, out.carry, zeroOut ? 1 : 0]
 }
