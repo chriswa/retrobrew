@@ -142,10 +142,6 @@ void loop() {
     }
   }
 
-  boolean clockState = digitalRead(PIN_CLOCK_IN);
-  boolean isRisingClockEdge = (clockState == true && lastClockState == false);
-  lastClockState = clockState;
-
   boolean isKeyboardSignalEnabled = digitalRead(PIN_SIGNAL_IN_KBD);
 
   if (!isKeyboardOutputting && isKeyboardSignalEnabled && !isKeyboardEmpty) {
@@ -158,20 +154,17 @@ void loop() {
     Serial.println();
   }
 
-  if (isRisingClockEdge) {
-    boolean isMonitorSignalEnabled = digitalRead(PIN_SIGNAL_IN_MON);
+  boolean clockState = digitalRead(PIN_CLOCK_IN);
+  boolean isMonitorSignalEnabled = digitalRead(PIN_SIGNAL_IN_MON);
+  boolean isRisingClockEdge = (clockState == true && lastClockState == false);
+  lastClockState = clockState;
 
-    //if (!isMonitorInputting && isMonitorSignalEnabled) {
-    //  isMonitorInputting = true;
-    if (isMonitorSignalEnabled) {
-      unsigned char busValue = readFromBus();
-      Serial.print("m: ");
-      Serial.print(busValue, HEX);
-      Serial.println();
-    }
-    //if (isMonitorInputting && !isMonitorSignalEnabled) {
-    //  isMonitorInputting = false; // done this read cycle
-    //}
+  if (isRisingClockEdge && isMonitorSignalEnabled) {
+
+    unsigned char busValue = readFromBus();
+    Serial.print("m: ");
+    Serial.print(busValue, HEX);
+    Serial.println();
   }
 
 }
