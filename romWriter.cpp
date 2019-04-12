@@ -162,7 +162,7 @@ void receiveData() {
 
 void setup() {
   Serial.begin(57600);
-  pinMode(LED_BUILTIN, OUTPUT);
+  //pinMode(LED_BUILTIN, OUTPUT);
 
   setupRomWriter();
 
@@ -184,9 +184,7 @@ void loop() {
     delay(500);
   }
   else {
-    digitalWrite(LED_BUILTIN, HIGH);
     receiveData();
-    digitalWrite(LED_BUILTIN, LOW);
     delay(10);
   }
 }

@@ -11,7 +11,16 @@ module.exports.dump = (addr0, addr1) => {
 	commands.push(['r', addr0 >> 8, addr0 & 0xff, addr1 >> 8, addr1 & 0xff])
 }
 
-module.exports.start = () => {
+module.exports.start = (verify = true) => {
+	//const verificationData = []
+	//commands.forEach(element => {
+	//	if (element[0] === 'w') {
+	//		const address = (element[1] << 8) | element[2]
+	//		const value = element[3]
+	//		verificationData[address] = value
+	//	}
+	//})
+
 	const totalCommands = commands.length
 
 	const port = new SerialPort('COM4', { baudRate: 57600 })

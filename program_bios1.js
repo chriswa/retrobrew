@@ -3,32 +3,45 @@ require('./asm.js')
 const romWriter = require('./romWriter.js')
 
 const modeSelectLabel = new Label()
+const jumpToRamLabel = new Label()
 const ramWriteLabel = new Label()
 const VAR_X = 0
+
+noop()
+noop()
+
+
+JNK(jumpToRamLabel)
 
 // set data address to start of RAM
 page(0x80)
 
+//lcdCtrl(0x01) // Clear
+//lcdCtrl(0x0f) // Display On, Cursor On, Blinking On
+//lcdCtrl(0b00111000)
+//'Programming RAM...'.split('').forEach(char => output(char))
+
 // wait for keyboard input
-modeSelectLabel.setHere()
-JNK(modeSelectLabel)
-keyboardA()
+//modeSelectLabel.setHere()
+//JNK(modeSelectLabel)
+//keyboardA()
 
 // compare with 'x' (execute)
-constB('x'.charCodeAt(0))
-sub_into_A() // XXX: hmm, this kinda sucks that i need to overwrite A! i think i need a "compare" instruction which does an ALU subtract but only writes to the flags register
-JZ(ramWriteLabel)
-
-// if 'x'
-jumpFar(0x80, 0x00)
+//constB('x'.charCodeAt(0))
+//sub_into_A() // XXX: hmm, this kinda sucks that i need to overwrite A! i think i need a "compare" instruction which does an ALU subtract but only writes to the flags register
+//page(0x80)
+//JZ(ramWriteLabel)
 
 // wait for keyboard input
 ramWriteLabel.setHere()
-JNK(ramWriteLabel)
-storeKbdIncA()
-jump(ramWriteLabel) // loop indefinitely: programmer will assert master reset to execute their program!
+JNK(ramWriteLabel) // hot loop, waiting for keyboard input
+storeKbdInc()
+jump(ramWriteLabel) // loop indefinitely: programmer is expected to assert master reset to execute their program
 
-// extra byte to workaround romWriter bug?!
+jumpToRamLabel.setHere()
+jumpFar(0x80, 0x00)
+
+// extra bytes to workaround romWriter bug?!
 constA(255)
 
 

@@ -16,11 +16,11 @@ module.exports.upload = function(machineCode) {
 
 	const buffer = [
 		resetInstruction,
-		char('x'),        // select programming mode -- TODO: swap these and in bios
+		//char('x'),      // select programming mode -- TODO: swap these and in bios
 		...machineCode,
-		255,              // an extra byte to allow completion of the intervening instructions which write to ram for the good bytes before this one
-		resetInstruction, // reset after keyboard buffer has finished being output to bus (but probably before the bios has a chance to write it to ram)
-		char('p'),        // select execution mode -- TODO: swap these and in bios
+		0xff,               // an extra byte to allow completion of the intervening instructions which write to ram for the good bytes before this one
+		resetInstruction,   // reset after keyboard buffer has finished being output to bus (but probably before the bios has a chance to write it to ram)
+		//char('p'),      // select execution mode -- TODO: swap these and in bios
 	]
 
 	console.log('Waiting for "READY" from arduino!')
@@ -35,17 +35,18 @@ module.exports.upload = function(machineCode) {
 	parser.on('data', data => {
 		let matches
 		if (data === 'READY\r') {
-			console.log('READY received, starting to program...')
+			console.log('<arduino> READY')
+			console.log('Arduino just powered up, starting to program...')
 			nextStep()
 		}
 		else if (matches = data.match(/^m: ([0-9A-F]{1,2})\r/)) {
 			const byte = parseInt(matches[1], 16)
 			const printable = (byte >= 32 && byte < 127) ? String.fromCharCode(byte) : '?'
-			console.log(`MONITOR OUTPUT: 0x${util.leftPad(byte.toString(16), 2)}: ${printable}`)
+			console.log(`<arduino> MONITOR OUTPUT: 0x${util.leftPad(byte.toString(16), 2)}: ${printable}`)
 		}
 		else if (matches = data.match(/^k: ([0-9A-F]{1,2})\r/)) {
 			const byte = parseInt(matches[1], 16)
-			//console.log(`KEYBOARD READ: ${byte.toString(16)}: ${String.fromCharCode(byte)}`)
+			console.log(`<arduino> KEYBOARD READ: ${byte.toString(16)}: ${String.fromCharCode(byte)}`)
 			nextStep()
 		}
 		else {
@@ -54,7 +55,7 @@ module.exports.upload = function(machineCode) {
 	})
 
 	function reset() {
-		//console.log("Sending master reset request!")
+		console.log("Sending master reset request!")
 		port.write([ char('R'), char('!') ], (err) => {
 			if (err) { console.log('Error on write: ', err.message); process.exit() }
 		})
@@ -69,7 +70,7 @@ module.exports.upload = function(machineCode) {
 			}
 			else {
 				const nextByte = nextBufferElement
-				//console.log(`Sending keyboard byte: 0x${util.leftPad(nextByte.toString(16), 2)}`)
+				console.log(`Sending keyboard byte: 0x${util.leftPad(nextByte.toString(16), 2)}`)
 				port.write([char('k'), nextByte], (err) => {
 					if (err) { console.log('Error on write: ', err.message); process.exit() }
 				})

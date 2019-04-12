@@ -6,7 +6,7 @@ const romWriter = require('./romWriter.js')
 
 const chipIndex = argv.chip
 if (chipIndex === undefined) {
-	throw new Error(`--chip=0..1 must be specified`)
+	throw new Error(`--chip=0..2 must be specified`)
 }
 
 const controlRoms = buildMicrocode()
@@ -16,10 +16,6 @@ if (!argv.dry) {
 	romWriter.start()
 }
 
-
-function leftPad(n, width, z = '0') {
-	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
-}
 
 function writeMicrocode(chipIndex, controlRoms) {
 	const romIndex = parseInt(chipIndex)
@@ -99,11 +95,14 @@ function buildInstructionStep(controlRoms, comment, instructionId, flags, stepIn
 
 	controlRoms[address] = microcode.getInactiveControlSignals()
 
+	//console.log(`${controlRoms[address].map(n => util.leftPad(n.toString(2), 8)).join(' | ')} < starting from defaults`)
+
 	controlSignals.split(' ').forEach(signalName => {
 		if (!signalName) { return } // can be blank due to concatenating ' NXT' onto ''
 		const signal = microcode.Signals[signalName]
 		if (!signal) { throw new Error(`Unknown signalName '${signalName}'`) }
-		controlRoms[address][signal.romIndex] ^= moveBit(1, 0, signal.bitIndex) // XOR should be fine unless user specifies the same signal twice in one microcode step!
+		signal.setActive(controlRoms[address])
+		//console.log(`${controlRoms[address].map(n => util.leftPad(n.toString(2), 8)).join(' | ')} < after applying ${signalName}`)
 	})
-	//console.log(`${util.leftPad(address.toString(16), 4)} : ${controlRoms[address].map(n => util.leftPad(n.toString(2), 8)).join(' | ')} // ${comment}`)
+	console.log(`${util.leftPad(address.toString(16), 4)} : ${controlRoms[address].map(n => util.leftPad(n.toString(2), 8)).join(' | ')} // ${comment} // ${controlSignals.trim()}`)
 }

@@ -122,16 +122,16 @@ void loop() {
         lastClockState = true;
         // wait for falling clock edge
         unsigned long startTime = millis();
-        while (digitalRead(PIN_CLOCK_IN) == false) {
+        while (digitalRead(PIN_CLOCK_IN) == true) {
           unsigned long currentTime = millis();
           if (currentTime - startTime > 1000) {
             Serial.println("MANUAL CLOCK MODE?");
-            if (digitalRead(PIN_CLOCK_IN) == false) {
+            if (digitalRead(PIN_CLOCK_IN) == true) {
               break; // clock is probably on manual!
             }
           }
         }
-        while (digitalRead(PIN_CLOCK_IN) == true) {}
+        while (digitalRead(PIN_CLOCK_IN) == false) {}
         digitalWrite(PIN_RESET_OUT, LOW);
         Serial.println("MASTER RESET END");
       }
@@ -142,7 +142,7 @@ void loop() {
     }
   }
 
-  boolean isKeyboardSignalEnabled = digitalRead(PIN_SIGNAL_IN_KBD);
+  boolean isKeyboardSignalEnabled = !digitalRead(PIN_SIGNAL_IN_KBD);
 
   if (!isKeyboardOutputting && isKeyboardSignalEnabled && !isKeyboardEmpty) {
     startKeyboardOut();
@@ -154,7 +154,7 @@ void loop() {
     Serial.println();
   }
 
-  boolean clockState = digitalRead(PIN_CLOCK_IN);
+  boolean clockState = !digitalRead(PIN_CLOCK_IN);
   boolean isMonitorSignalEnabled = digitalRead(PIN_SIGNAL_IN_MON);
   boolean isRisingClockEdge = (clockState == true && lastClockState == false);
   lastClockState = clockState;
