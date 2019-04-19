@@ -83,8 +83,8 @@ function buildInstructionStep(controlRoms, comment, instructionId, flags, stepIn
 	for (let instructionBit = 0; instructionBit <= 7; instructionBit += 1) {
 		address |= moveBit(instructionId, instructionBit, instructionBit)
 	}
-	address |= moveBit(stepIndex, 0, 13)
-	address |= moveBit(stepIndex, 1, 8)
+	address |= moveBit(stepIndex, 0, 8)
+	address |= moveBit(stepIndex, 1, 13)
 	address |= moveBit(stepIndex, 2, 14)
 	address |= moveBit(stepIndex, 3, 12)
 	address |= moveBit(flags, 0, 10)

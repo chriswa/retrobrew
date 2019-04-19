@@ -50,15 +50,15 @@ function addSignal(signal) { Signals[signal.name] = signal }
 
 /** @type {Object< string, BaseSignal >} } */
 const Signals = {};
-'Q0 LCD HLT NXT DI II FW MS'.split(' ').forEach((token, index) => {
+'FW Q01 MS HLT NXT II DI LCD'.split(' ').forEach((token, index) => {
     addSignal(new NormalSignal(token, 0, index, false))
 })
 const muxOutputOrder = [14, 13, 12, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-'KBD DPR IPR IOR DOR MR AR SR BR'.split(' ').forEach((token, index) => {
+'KBD QR1 QR2 QR3 QR4 AR BR SR QR8 QR9 DPR IPR DOR IOR MR'.split(' ').forEach((token, index) => {
     addSignal(new MuxedSignal(token, 1, [0, 1, 2, 3], muxOutputOrder[index]))
     //console.log(`MuxedSignal ${token} value is ${util.leftPad(value.toString(2), 4)}`)
 })
-'AW BW OUT MW DOW IOW IPW DPW IW'.split(' ').forEach((token, index) => {
+'BW AW QW2 QW3 QW4 QW5 QW4 QW5 IPW DPW IW IOW DOW MW OUT'.split(' ').forEach((token, index) => {
     addSignal(new MuxedSignal(token, 1, [7, 6, 5, 4], muxOutputOrder[index]))
     //console.log(`MuxedSignal ${token} value is ${util.leftPad(value.toString(2), 4)}`)
 })
