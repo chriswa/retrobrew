@@ -2,7 +2,7 @@ module.exports = {
 	add: { opIndex: 0x00, math(a, b, carryIn, isHighNibbleChip, out) {
 		out.result = a + b + (isHighNibbleChip ? carryIn : 0)
 	}},
-	sub: { opIndex: 0x01, math(a, b, carryIn, isHighNibbleChip, out) {
+	sub: { opIndex: 0x01, math(a, b, carryIn, isHighNibbleChip, out) { // microcode depends on sub being 0x01 for CMP instruction
 		const bTwosComplement = (b ^ 0xf) + (isHighNibbleChip ? carryIn : 1)
 		out.result = a + bTwosComplement
 	}},

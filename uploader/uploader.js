@@ -12,6 +12,8 @@ const resetInstruction = Symbol('resetInstruction')
 //	//0x80, 0xff, 0x70, 0x48, 0x70, 0x65, 0x70, 0x6c, 0x70, 0x6c, 0x70, 0x6f, 0x70, 0x20, 0x70, 0x77, 0x70, 0x6f, 0x70, 0x72, 0x70, 0x6c, 0x70, 0x64, 0x70, 0x21, 0x1, 0x1, 0x13, 0x0, 0x4, 0x0, 0x1, 0x0, 0x20, 0x0, 0x4a, 0x22, 0x1, 0x1, 0x20, 0x0, 0x0, 0x0, 0x0, 0x13, 0x0, 0x40, 0x1e, 0x40, 0x1e
 //]
 
+let port
+
 module.exports.upload = function(machineCode) {
 
 	const buffer = [
@@ -25,7 +27,7 @@ module.exports.upload = function(machineCode) {
 
 	console.log('Waiting for "READY" from arduino!')
 
-	const port = new SerialPort('COM4', { baudRate: 57600 })
+	port = new SerialPort('COM4', { baudRate: 57600 })
 	port.on("open", () => {
 		console.log('serial port open')
 		//nextStep()
@@ -76,11 +78,41 @@ module.exports.upload = function(machineCode) {
 				})
 			}
 		}
-	}
-
-	function char(s) {
-		return s.charCodeAt(0)
+		else {
+			startInteractiveMode()
+		}
 	}
 
 }
+
+function char(s) {
+	return s.charCodeAt(0)
+}
+
+let interactiveModeStarted = false
+function startInteractiveMode() {
+	if (interactiveModeStarted) { return }
+	interactiveModeStarted = true
+
+	const readline = require('readline')
+	readline.emitKeypressEvents(process.stdin)
+	process.stdin.setRawMode(true)
+	process.stdin.on('keypress', (str, key) => {
+		if (key.ctrl && key.name === 'c') {
+			process.exit()
+		}
+		else {
+			if (str) {
+				console.log(`uploader interactiveMode: ${str} ${JSON.stringify(key)}`)
+				port.write([char('k'), char(str)], (err) => {
+					if (err) { console.log('Error on write: ', err.message); process.exit() }
+				})
+			}
+			else {
+				console.log(`uploader interactiveMode: keypress !str, key is ${JSON.stringify(key)}`)
+			}
+		}
+	})
+}
+
 

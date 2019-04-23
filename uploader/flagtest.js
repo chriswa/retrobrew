@@ -13,22 +13,35 @@ function print(str) { str.split('').forEach(c => output(c)) }
 lcdCtrl(0x01) // Clear
 lcdCtrl(0x0f) // Display On, Cursor On, Blinking On
 lcdCtrl(0b00111000)
+//outerLabel.setHere()
+//jump(outerLabel)
 
-//pause()
-//pause()
-//pause()
-//pause()
-//pause()
-outerLabel.setHere()
-print(`  Don't forget to`)
-lcdCtrl(0xC0)
-print(`    build your`)
-lcdCtrl(0x94)
-print(`       FAIL`)
-lcdCtrl(0xD4)
-print(`      WHALE!`)
+print('Flags? ')
+//halt()
+
+constA(241)
+constB(199)
+add_into_A()
+
+const labelC = new Label()
+const labelC1 = new Label()
+JNC(labelC)
+print('C ')
+jump(labelC1)
+labelC.setHere()
+print('NC ')
+labelC1.setHere()
+
+const labelZ = new Label()
+const labelZ1 = new Label()
+JNZ(labelZ)
+print('Z ')
+jump(labelZ1)
+labelZ.setHere()
+print('NZ ')
+labelZ1.setHere()
+
 halt()
-jump(outerLabel)
 
 compile()
 

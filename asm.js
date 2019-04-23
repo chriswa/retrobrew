@@ -42,6 +42,14 @@ class Label {
 	}
 }
 
+const lblMap = {}
+function lbl(name) {
+	if (!lblMap[name]) { lblMap[name] = new Label() }
+	return lblMap[name]
+}
+
+global['lbl'] = lbl
+
 global['Label'] = Label
 
 global['compile'] = () => {

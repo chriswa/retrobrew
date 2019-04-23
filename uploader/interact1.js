@@ -5,30 +5,50 @@ const uploader = require('./uploader.js')
 const leftPad = util.leftPad
 
 const outerLabel = new Label()
-const innerLabel = new Label()
-const VAR_X = 0
 
-function print(str) { str.split('').forEach(c => output(c)) }
+const lcd = require('./lcd.js')
 
-lcdCtrl(0x01) // Clear
-lcdCtrl(0x0f) // Display On, Cursor On, Blinking On
-lcdCtrl(0b00111000)
+lcd.init()
 
-//pause()
-//pause()
-//pause()
-//pause()
-//pause()
-outerLabel.setHere()
-print(`  Don't forget to`)
-lcdCtrl(0xC0)
-print(`    build your`)
-lcdCtrl(0x94)
-print(`       FAIL`)
-lcdCtrl(0xD4)
-print(`      WHALE!`)
-halt()
-jump(outerLabel)
+lcd.print("RetrobrewOS v0.0.1")
+lcd.moveCursor(1)
+lcd.print("> ")
+
+
+
+
+lcd.moveCursor(1, 2)
+
+page(0xff)
+constA(2)
+storeA(0)
+
+lbl('input').setHere()
+JNK(lbl('input'))
+
+keyboardA()
+
+constB(8); sub_into_B() // cmp(8)
+JZ(lbl('backspace'))
+
+
+outputA()
+
+loadA(0); constB(1); add_into_A(); storeA(0) // inc x
+
+jump(lbl('input'))
+
+lbl('backspace').setHere()
+
+loadA(0); constB(1); sub_into_A(); storeA(0) // dec x
+
+constB(0xC0)
+add_into_A()
+lcdCtrlA()
+lcd.print(" ")
+lcdCtrlA()
+
+jump(lbl('input'))
 
 compile()
 

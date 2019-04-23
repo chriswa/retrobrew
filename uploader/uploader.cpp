@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#define RESET_TIME_MS 100
+
 #define PIN_ENABLE 2
 #define PIN_DIRECTION 3
 #define PIN_DATA_7 4
@@ -117,7 +119,7 @@ void loop() {
         Serial.read(); // consume second character
         Serial.println("MASTER RESET START");
         digitalWrite(PIN_RESET_OUT, HIGH);
-        delay(1000);
+        delay(RESET_TIME_MS);
         resetKeyboardState();
         lastClockState = true;
         // wait for falling clock edge
@@ -155,7 +157,7 @@ void loop() {
   }
 
   boolean clockState = !digitalRead(PIN_CLOCK_IN);
-  boolean isMonitorSignalEnabled = digitalRead(PIN_SIGNAL_IN_MON);
+  boolean isMonitorSignalEnabled = !digitalRead(PIN_SIGNAL_IN_MON);
   boolean isRisingClockEdge = (clockState == true && lastClockState == false);
   lastClockState = clockState;
 

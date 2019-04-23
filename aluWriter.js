@@ -71,7 +71,7 @@ function writeAlu(isHighNibbleChip) {
 					// PROPER BIT POSITIONS
 					let address = a
 					address = address | moveBit(b, 0, 13) | moveBit(b, 1, 8) | moveBit(b, 2, 9) | moveBit(b, 3, 11)
-					address = address | moveBit(op, 0, 4) | moveBit(op, 1, 5) | moveBit(op, 2, 6) | moveBit(op, 3, 7) | moveBit(op, 4, 12) | moveBit(op, 5, 14)
+					address = address | moveBit(op, 5, 4) | moveBit(op, 4, 5) | moveBit(op, 3, 6) | moveBit(op, 2, 7) | moveBit(op, 1, 12) | moveBit(op, 0, 14)
 					address = address | moveBit(carryIn, 0, 10)
 
 					//console.log(`a=${binaryString(a, 4)}, b=${binaryString(b, 4)}, op=${binaryString(op, 3)}, carryIn=${binaryString(carryIn, 1)} -> addr=${binaryString(address, 12)}`)

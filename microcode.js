@@ -50,15 +50,18 @@ function addSignal(signal) { Signals[signal.name] = signal }
 
 /** @type {Object< string, BaseSignal >} } */
 const Signals = {};
-'FW Q01 MS HLT NXT II DI LCD'.split(' ').forEach((token, index) => {
+'FW LCD MS HLT NXT II DI xx'.split(' ').forEach((token, index) => {
+    if (token === 'xx') { return }
     addSignal(new NormalSignal(token, 0, index, false))
 })
 const muxOutputOrder = [14, 13, 12, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-'KBD QR1 QR2 QR3 QR4 AR BR SR QR8 QR9 DPR IPR DOR IOR MR'.split(' ').forEach((token, index) => {
+'KBD xx xx xx xx AR BR SR xx xx DPR IPR DOR IOR MR'.split(' ').forEach((token, index) => {
+    if (token === 'xx') { return }
     addSignal(new MuxedSignal(token, 1, [0, 1, 2, 3], muxOutputOrder[index]))
     //console.log(`MuxedSignal ${token} value is ${util.leftPad(value.toString(2), 4)}`)
 })
-'BW AW QW2 QW3 QW4 QW5 QW4 QW5 IPW DPW IW IOW DOW MW OUT'.split(' ').forEach((token, index) => {
+'BW AW OUT xx xx xx xx xx IPW DPW IW IOW DOW MW xx'.split(' ').forEach((token, index) => {
+    if (token === 'xx') { return }
     addSignal(new MuxedSignal(token, 1, [7, 6, 5, 4], muxOutputOrder[index]))
     //console.log(`MuxedSignal ${token} value is ${util.leftPad(value.toString(2), 4)}`)
 })
@@ -83,6 +86,7 @@ function getInactiveControlSignals() {
 const Instructions = {
     aluToA:       { id: 0x20, idMax: 0x2f, signals: flags => ['SR AW FW'] }, // ALU! bottom 4 bits select ALU operation
     aluToB:       { id: 0x30, idMax: 0x3f, signals: flags => ['SR BW FW'] }, // ALU! bottom 4 bits select ALU operation
+    cmp:          { id: 0x11, signals: flags => ['FW'] }, // ALU! bottom 4 bits select ALU operation, therefore subtract!
     constA:       { id: 0x01, signals: flags => ['MR AW II'] },
     constB:       { id: 0x02, signals: flags => ['MR BW II'] },
     loadA:        { id: 0x03, signals: flags => ['MR DOW II', 'MS MR AW'] },

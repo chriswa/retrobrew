@@ -5,29 +5,40 @@ const uploader = require('./uploader.js')
 const leftPad = util.leftPad
 
 const outerLabel = new Label()
-const innerLabel = new Label()
-const VAR_X = 0
 
 function print(str) { str.split('').forEach(c => output(c)) }
 
 lcdCtrl(0x01) // Clear
 lcdCtrl(0x0f) // Display On, Cursor On, Blinking On
 lcdCtrl(0b00111000)
-
-//pause()
-//pause()
-//pause()
-//pause()
-//pause()
-outerLabel.setHere()
-print(`  Don't forget to`)
+print('    Hello Lauren!   ')
 lcdCtrl(0xC0)
-print(`    build your`)
-lcdCtrl(0x94)
-print(`       FAIL`)
+print('      <3    <3      ')
 lcdCtrl(0xD4)
-print(`      WHALE!`)
-halt()
+print('      <3    <3      ')
+
+
+outerLabel.setHere()
+
+lcdCtrl(0x94)
+print(' <3  I love you  <3 ')
+
+constA(255)
+const wait1 = new Label()
+wait1.setHere()
+decA_into_A()
+JNZ(wait1)
+
+
+lcdCtrl(0x94)
+print('<3   I love you   <3')
+
+constA(255)
+const wait2 = new Label()
+wait2.setHere()
+decA_into_A()
+JNZ(wait2)
+
 jump(outerLabel)
 
 compile()

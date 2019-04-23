@@ -5,30 +5,59 @@ const uploader = require('./uploader.js')
 const leftPad = util.leftPad
 
 const outerLabel = new Label()
-const innerLabel = new Label()
-const VAR_X = 0
 
-// double incremented upon fetching instruction 01 (from previous instruction 4a) possibly due to current flag state?
+function print(str) { str.split('').forEach(c => output(c)) }
 
 lcdCtrl(0x01) // Clear
 lcdCtrl(0x0f) // Display On, Cursor On, Blinking On
 lcdCtrl(0b00111000)
-outerLabel.setHere()
-output('H')
-output('e')
-output('l')
-output('l')
-output('o')
-output(' ')
-output('w')
-halt()
-output('o')
-output('r')
-output('l')
-output('d')
-output('!')
-output(' ')
-jump(outerLabel)
+lbl("top").setHere()
+print('Hello world!  ')
+
+page(0xff)
+constA(17)
+constB(200)
+add_into_A()
+storeA(0)
+
+print('0x')
+
+constB(0xf0)
+//halt()
+and_into_A()
+shrA_into_A()
+shrA_into_A()
+shrA_into_A()
+shrA_into_A()
+constB(10)
+sub_into_B()
+JC(lbl('hex1'))
+constB('0'.charCodeAt(0))
+jump(lbl('ascii1'))
+lbl('hex1').setHere()
+constB('A'.charCodeAt(0) - 10)
+lbl('ascii1').setHere()
+add_into_A()
+outputA()
+
+loadA(0)
+constB(0x0f)
+and_into_A()
+constB(10)
+sub_into_B()
+JC(lbl('hex2'))
+constB('0'.charCodeAt(0))
+jump(lbl('ascii2'))
+lbl('hex2').setHere()
+constB('A'.charCodeAt(0) - 10)
+lbl('ascii2').setHere()
+add_into_A()
+outputA()
+
+lcdCtrl(0x01) // Clear
+
+
+jump(lbl("top"))
 
 compile()
 
