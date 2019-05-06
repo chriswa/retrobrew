@@ -84,9 +84,10 @@ function getInactiveControlSignals() {
  | KBD: Keyboard Read         | OUT: Display Out           | NXT: Next Instruction      |
  */
 const Instructions = {
+    noop:         { id: 0x00, signals: flags => [] },
     aluToA:       { id: 0x20, idMax: 0x2f, signals: flags => ['SR AW FW'] }, // ALU! bottom 4 bits select ALU operation
     aluToB:       { id: 0x30, idMax: 0x3f, signals: flags => ['SR BW FW'] }, // ALU! bottom 4 bits select ALU operation
-    cmp:          { id: 0x11, signals: flags => ['FW'] }, // ALU! bottom 4 bits select ALU operation, therefore subtract!
+    cmp:          { id: 0x11, signals: flags => ['FW SR'] }, // ALU! bottom 4 bits select ALU operation, therefore subtract! SR is just for aesthetics
     constA:       { id: 0x01, signals: flags => ['MR AW II'] },
     constB:       { id: 0x02, signals: flags => ['MR BW II'] },
     loadA:        { id: 0x03, signals: flags => ['MR DOW II', 'MS MR AW'] },
@@ -104,6 +105,7 @@ const Instructions = {
     JC:           { id: 0x48, signals: flags => (flags & 2) ? ['MR IOW'] : ['II'] },
     JNC:          { id: 0x4a, signals: flags => !(flags & 2) ? ['MR IOW'] : ['II'] },
     JNK:          { id: 0x4f, signals: flags => !(flags & 4) ? ['MR IOW'] : ['II'] },
+    JNKA:         { id: 0x4e, signals: flags => !(flags & 4) ? ['MR IOW'] : ['II KBD AW'] },
     jumpFar:      { id: 0xc0, signals: flags => ['MR BW II', 'MR IOW', 'BR IPW'] },
     jumpA:        { id: 0x41, signals: flags => ['AR IOW'] },
     jumpABFar:    { id: 0xc1, signals: flags => ['AR IOW', 'BR IPW'] },
@@ -128,7 +130,6 @@ const Instructions = {
     istoreA:      { id: 0x19, signals: flags => ['MR DOW II', 'MS MR DOW', 'AR MS MW'] },
     iloadAFar:    { id: 0x8c, signals: flags => ['MR DPW II', 'MR DOW II', 'MS MR DOW', 'MS MR AW'] },
     istoreAFar:   { id: 0x9c, signals: flags => ['MR DPW II', 'MR DOW II', 'MS MR DOW', 'AR MS MW'] },
-    noop:         { id: 0x00, signals: flags => ['AR'] },
     pause:        { id: 0xfd, signals: flags => ['AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR'] },
     debug:        { id: 0xff, signals: flags => ['IPR', 'IOR', 'DPR', 'DOR', 'AR', 'BR', ((flags & 1) ? '' : 'IPR'), ((flags & 2) ? '' : 'IPR'), ((flags & 4) ? '' : 'IPR')] },
     halt:         { id: 0xfe, signals: flags => ['HLT'] },

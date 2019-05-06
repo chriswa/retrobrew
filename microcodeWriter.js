@@ -36,7 +36,7 @@ function writeMicrocode(chipIndex, controlRoms) {
 
 function buildMicrocode() {
 	const controlRoms = []
-	buildFetches(controlRoms)
+	//buildFetches(controlRoms)
 	buildInstructions(controlRoms)
 	console.log('buildMicrocode complete!\n\n')
 	return controlRoms
@@ -44,13 +44,13 @@ function buildMicrocode() {
 
 // every instruction's first microcode must load the next instruction into the Instruction Register,
 // ...also increment the Instruction Pointer so that the next microcode instruction can read the next byte!
-function buildFetches(controlRoms) {
-	for (let instructionId = 0; instructionId <= 255; instructionId += 1) {
-		for (let flags = 0; flags <= microcode.FLAG_MASK; flags += 1) {
-			buildInstructionStep(controlRoms, 'fetch', instructionId, flags, 0, 'MR IW II')
-		}
-	}
-}
+//function buildFetches(controlRoms) {
+//	for (let instructionId = 0; instructionId <= 255; instructionId += 1) {
+//		for (let flags = 0; flags <= microcode.FLAG_MASK; flags += 1) {
+//			buildInstructionStep(controlRoms, 'fetch', instructionId, flags, 0, 'MR IW II')
+//		}
+//	}
+//}
 
 function buildInstructions(controlRoms) {
 	for (const instructionName in microcode.Instructions) {
@@ -69,12 +69,10 @@ function buildInstructions(controlRoms) {
 }
 
 function buildInstruction(controlRoms, comment, instructionId, flags, controlSignalSequence) {
-	for (let stepIndex = 0; stepIndex < controlSignalSequence.length; stepIndex += 1) {
-		let controlSignals = controlSignalSequence[stepIndex]
-		if (stepIndex === controlSignalSequence.length - 1) {
-			controlSignals += ' NXT'
-		}
-		buildInstructionStep(controlRoms, `${comment} (step ${stepIndex})`, instructionId, flags, stepIndex + 1, controlSignals)
+	for (let stepIndex = 0; stepIndex < controlSignalSequence.length + 1; stepIndex += 1) {
+		const isFinalStep = stepIndex === controlSignalSequence.length + 1
+		let controlSignals = isFinalStep ? 'MR IW II NXT' : controlSignalSequence[stepIndex] // every instruction completes by fetching the next instruction (including jumps)
+		buildInstructionStep(controlRoms, `${comment} (step ${stepIndex})`, instructionId, flags, stepIndex, controlSignals)
 	}
 }
 

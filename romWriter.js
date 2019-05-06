@@ -23,6 +23,8 @@ module.exports.start = (verify = true) => {
 
 	const totalCommands = commands.length
 
+	let previousPercentage = 0
+
 	const port = new SerialPort('COM4', { baudRate: 57600 })
 	port.on("open", () => { console.log('serial port open') })
 
@@ -35,7 +37,8 @@ module.exports.start = (verify = true) => {
 				return typeof el === 'string' ? el.charCodeAt(0) : el
 			})
 			//console.log(nextCommand)
-			console.log(1 - (commands.length / totalCommands))
+			const currentPercentage = Math.round(100 * (1 - commands.length / totalCommands)) / 100
+			if (currentPercentage !== previousPercentage) { console.log(currentPercentage); previousPercentage = currentPercentage }
 			port.write(nextCommand, (err) => {
 				if (err) { console.log('Error on write: ', err.message); process.exit() }
 				//console.log('message written')

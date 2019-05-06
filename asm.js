@@ -33,24 +33,29 @@ function declareFunction(functionName, argCount, instructionCode) {
 }
 
 
+// Labels
+
 class Label {
-	setHere() {
-		this.value = machineCode.length
-	}
+	constructor(name) { this.name = name }
+	setHere() { this.value = machineCode.length }
 	resolve() {
+		if (this.value === undefined) { throw new Error(`Label ${this.name} cannot be resolved because it was never setHere() to location in machinecode`) }
 		return this.value
 	}
 }
-
-const lblMap = {}
-function lbl(name) {
-	if (!lblMap[name]) { lblMap[name] = new Label() }
-	return lblMap[name]
+global['l'] = new Proxy({}, {
+	get(target, key) {
+		if (key === '[object Object]') { throw new Error('wat') }
+		if (!target[key]) { console.log(`new Label ${key}`); target[key] = new Label(key) }
+		else { console.log(`old Label ${key}`) }
+		return target[key]
+	}
+})
+global['here'] = (label) => {
+	label.setHere()
 }
 
-global['lbl'] = lbl
-
-global['Label'] = Label
+// Compile
 
 global['compile'] = () => {
 	for (let addr = 0; addr < machineCode.length; addr += 1) {
@@ -65,6 +70,7 @@ global['compile'] = () => {
 	let sourceMapContent = ''
 	sourceMap.forEach(({ addr, functionName, argCount }) => {
 		const values = machineCode.slice(addr, addr + argCount + 1)
+		console.log(JSON.stringify(values))
 		const addrDisplay = (0x8000 + addr).toString(16)
 		const valuesDisplay = values.map(n => util.leftPad(n.toString(16), 2)).join(' ')
 		sourceMapContent += `${addrDisplay} : ${util.rightPad(valuesDisplay, 10, ' ')} // ${functionName}\n`

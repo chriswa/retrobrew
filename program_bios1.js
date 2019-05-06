@@ -1,45 +1,48 @@
 const argv = require('minimist')(process.argv.slice(2))
 require('./asm.js')
 const romWriter = require('./romWriter.js')
-
-const modeSelectLabel = new Label()
-const jumpToRamLabel = new Label()
-const ramWriteLabel = new Label()
-const VAR_X = 0
-
-noop()
-noop()
+const lcd = require('./lcd.js')
 
 
-JNK(jumpToRamLabel)
 
-// set data address to start of RAM
-page(0x80)
+	noop()
+	lcd.init()
+	JNK(l.showMenu)
 
-//lcdCtrl(0x01) // Clear
-//lcdCtrl(0x0f) // Display On, Cursor On, Blinking On
-//lcdCtrl(0b00111000)
-//'Programming RAM...'.split('').forEach(char => output(char))
+here(l.waitForInput)
+	JNKA(l.waitForInput)
 
-// wait for keyboard input
-//modeSelectLabel.setHere()
-//JNK(modeSelectLabel)
-//keyboardA()
+	constB('p'.charCodeAt(0)); cmp(); JZ(l.programmingMode)
+	constB('x'.charCodeAt(0)); cmp(); JZ(l.executeMode)
+	constB('r'.charCodeAt(0)); cmp(); JZ(l.rot13)
+	jump(l.waitForInput)
 
-// compare with 'x' (execute)
-//constB('x'.charCodeAt(0))
-//sub_into_A() // XXX: hmm, this kinda sucks that i need to overwrite A! i think i need a "compare" instruction which does an ALU subtract but only writes to the flags register
-//page(0x80)
-//JZ(ramWriteLabel)
+here(l.showMenu)
+	lcd.print('Mode?')
+	lcd.moveCursor(1)
+	lcd.print('(p)rogram')
+	lcd.moveCursor(2)
+	lcd.print('e(x)ecute')
+	lcd.moveCursor(3)
+	lcd.print('(r)ot13')
+	jump(l.waitForInput)
 
-// wait for keyboard input
-ramWriteLabel.setHere()
-JNK(ramWriteLabel) // hot loop, waiting for keyboard input
-storeKbdInc()
-jump(ramWriteLabel) // loop indefinitely: programmer is expected to assert master reset to execute their program
+here(l.programmingMode)
+	lcd.clear()
+	lcd.print('Programming...')
+	page(0x80)
+here(l.ramWrite)
+	JNK(l.ramWrite)
+	storeKbdInc()
+	jump(l.ramWrite) // n.b. reset computer to exit programming mode
 
-jumpToRamLabel.setHere()
-jumpFar(0x80, 0x00)
+here(l.executeMode)
+	lcd.clear()
+	jumpFar(0x80, 0x00)
+
+here(l.rot13)
+	lcd.clear()
+	jumpFar(0x01, 0x00)
 
 // extra bytes to workaround romWriter bug?!
 constA(255)

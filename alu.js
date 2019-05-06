@@ -48,4 +48,7 @@ module.exports = {
 		const bTwosComplement = (1 ^ 0xf) + (isHighNibbleChip ? carryIn : 1)
 		out.result = a + bTwosComplement
 	}},
+	justA: { opIndex: 0x0f, math(a, b, carryIn, isHighNibbleChip, out) {
+		out.result = a
+	}},
 }
