@@ -1,6 +1,11 @@
 const aluOperations = require('./alu.js')
 const microcode = require('./microcode.js')
 
+console.log(`declare var l: any;`)
+console.log(`declare var machineCode: any;`)
+console.log(`declare function ________________(any): void;`)
+console.log(`declare function compile(): void;`)
+
 for (let instructionName in microcode.Instructions) {
 	const instruction = microcode.Instructions[instructionName]
 	const argCount = determineArgumentCountFromInstructionSignals(instruction.signals)

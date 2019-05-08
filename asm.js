@@ -21,6 +21,12 @@ for (let instructionName in microcode.Instructions) {
 const machineCode = global['machineCode'] = []
 const sourceMap = []
 
+module.exports.reset = () => {
+	machineCode.length = 0
+	sourceMap.length = 0
+	Object.keys(labelDict).forEach((key) => { delete labelDict[key] })
+}
+
 function declareFunction(functionName, argCount, instructionCode) {
 	//console.log(functionName)
 	global[functionName] = (...args) => {
@@ -35,6 +41,7 @@ function declareFunction(functionName, argCount, instructionCode) {
 
 // Labels
 
+const labelDict = {}
 class Label {
 	constructor(name) { this.name = name }
 	setHere() { this.value = machineCode.length }
@@ -43,15 +50,20 @@ class Label {
 		return this.value
 	}
 }
-global['l'] = new Proxy({}, {
+global['l'] = new Proxy(labelDict, {
 	get(target, key) {
 		if (key === '[object Object]') { throw new Error('wat') }
-		if (!target[key]) { console.log(`new Label ${key}`); target[key] = new Label(key) }
-		else { console.log(`old Label ${key}`) }
+		if (!target[key]) {
+			//console.log(`new Label ${key}`)
+			target[key] = new Label(key)
+		}
+		else {
+			//console.log(`old Label ${key}`)
+		}
 		return target[key]
 	}
 })
-global['here'] = (label) => {
+global['________________'] = (label) => {
 	label.setHere()
 }
 
@@ -70,8 +82,8 @@ global['compile'] = () => {
 	let sourceMapContent = ''
 	sourceMap.forEach(({ addr, functionName, argCount }) => {
 		const values = machineCode.slice(addr, addr + argCount + 1)
-		console.log(JSON.stringify(values))
-		const addrDisplay = (0x8000 + addr).toString(16)
+		//console.log(JSON.stringify(values))
+		const addrDisplay = (addr).toString(16)
 		const valuesDisplay = values.map(n => util.leftPad(n.toString(16), 2)).join(' ')
 		sourceMapContent += `${addrDisplay} : ${util.rightPad(valuesDisplay, 10, ' ')} // ${functionName}\n`
 	})

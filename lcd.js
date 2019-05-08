@@ -5,7 +5,10 @@ module.exports = new class LCD {
 		lcdCtrl(0x0f) // Display On, Cursor On, Blinking On
 		lcdCtrl(0b00000110) // Entry Mode: cursor increments, no auto-shifting
 	}
-	clear() { lcdCtrl(0x01) }
+	clear() {
+		lcdCtrl(0x01)
+		pause()
+	}
 	print(str) { str.split('').forEach(c => output(c)) }
 	getLineAddress(y) {
 		if (y === 0) { return 0x80 }

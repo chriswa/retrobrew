@@ -21,16 +21,13 @@ function writeMicrocode(chipIndex, controlRoms) {
 	const romIndex = parseInt(chipIndex)
 
 	for (let address = 0; address <= 0x7fff; address += 1) {
-		const controlWord = controlRoms[address]
-		let byte
-		if (controlWord) {
-			byte = controlWord[romIndex]
-		}
-		else {
-			byte = microcode.getInactiveControlSignals()[romIndex]
+		if (controlRoms[address] === undefined) {
+			controlRoms[address] = microcode.getInactiveControlSignals()
+			const signal = microcode.Signals['HLT']
+			signal.setActive(controlRoms[address])
 		}
 		//console.log(`${leftPad(address.toString(16), 4)} := ${leftPad(byte.toString(2), 8)}`)
-		romWriter.write(address, byte)
+		romWriter.write(address, controlRoms[address][romIndex])
 	}
 }
 
@@ -70,7 +67,7 @@ function buildInstructions(controlRoms) {
 
 function buildInstruction(controlRoms, comment, instructionId, flags, controlSignalSequence) {
 	for (let stepIndex = 0; stepIndex < controlSignalSequence.length + 1; stepIndex += 1) {
-		const isFinalStep = stepIndex === controlSignalSequence.length + 1
+		const isFinalStep = stepIndex === controlSignalSequence.length
 		let controlSignals = isFinalStep ? 'MR IW II NXT' : controlSignalSequence[stepIndex] // every instruction completes by fetching the next instruction (including jumps)
 		buildInstructionStep(controlRoms, `${comment} (step ${stepIndex})`, instructionId, flags, stepIndex, controlSignals)
 	}

@@ -1,6 +1,4 @@
-const argv = require('minimist')(process.argv.slice(2))
-require('../asm.js')
-const uploader = require('./uploader.js')
+const asm = require('../asm.js')
 const lcd = require('../lcd.js')
 
 const INPUT_LINE = 1
@@ -149,9 +147,3 @@ jump(l.startOver)
 //jump(l.halt)
 
 compile()
-
-
-if (!argv.dry) {
-	console.log('Uploading...')
-	uploader.upload(machineCode)
-}
