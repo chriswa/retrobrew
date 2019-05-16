@@ -1,14 +1,17 @@
-module.exports.moveBit = (n, oldBit, newBit) => {
-	const value = (n >> oldBit) & 0x1
+module.exports.moveBit = (n, oldBit, newBit, flipBit = false) => {
+	let value = (n >> oldBit) & 0x1
+	if (flipBit) {
+		value = ~value & 0x1
+	}
 	return value << newBit
 }
 
 module.exports.leftPad = (n, width, z = '0') => {
-    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
+	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
 }
 
 module.exports.rightPad = (n, width, z = '0') => {
-    return n.length >= width ? n : n + new Array(width - n.length + 1).join(z)
+	return n.length >= width ? n : n + new Array(width - n.length + 1).join(z)
 }
 
 module.exports.binaryString = (n, width) => {

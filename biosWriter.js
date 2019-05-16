@@ -14,9 +14,11 @@ const offset = argv.offset ? parseInt(argv.offset, 16) : 0
 console.log(script)
 require('./' + script)
 
+console.log(`machineCode.length = ${machineCode.length.toString(16)}`)
+
 for (let addr = 0; addr < machineCode.length; addr += 1) {
 	const fullAddr = addr + offset
-	console.log(fullAddr.toString(16) + ' := ' + machineCode[addr].toString(16))
+	//console.log(fullAddr.toString(16) + ' := ' + machineCode[addr].toString(16))
 	romWriter.write(fullAddr, machineCode[addr])
 }
 

@@ -44,10 +44,15 @@ function declareFunction(functionName, argCount, instructionCode) {
 const labelDict = {}
 class Label {
 	constructor(name) { this.name = name }
-	setHere() { this.value = machineCode.length }
-	resolve() {
-		if (this.value === undefined) { throw new Error(`Label ${this.name} cannot be resolved because it was never setHere() to location in machinecode`) }
-		return this.value
+	setHere() { this.location = machineCode.length }
+	resolveShort(jumpSourceAddr) {
+		if (this.location === undefined) { throw new Error(`Label ${this.name} cannot be resolved because it was never setHere() to location in machinecode`) }
+		if (jumpSourceAddr >> 8 !== this.location >> 8) { throw new Error(`Label.resolveShort attempting to jump from outside of page!`) }
+		return this.location & 0xff
+	}
+	resolveLong() {
+		if (this.location === undefined) { throw new Error(`Label ${this.name} cannot be resolved because it was never setHere() to location in machinecode`) }
+		return this.location
 	}
 }
 global['l'] = new Proxy(labelDict, {
@@ -69,15 +74,45 @@ global['________________'] = (label) => {
 
 // Compile
 
+function shortAddressResolver() {
+}
+function longAddressResolver() {
+}
+const functionArgumentResolvers = {}
+'jump JZ JNZ JC JNC JNK JNKA'.split(' ').forEach(functionName => {
+	functionArgumentResolvers[functionName] = (labelArg, jumpSourceAddr) => {
+		return [ labelArg.resolveShort(jumpSourceAddr) ]
+	}
+})
+'jumpFar JZFar JNZFar JCFar JNCFar JNKFar JNKAFar'.split(' ').forEach(functionName => {
+	functionArgumentResolvers[functionName] = (labelArg, jumpSourceAddr) => {
+		const location = labelArg.resolveLong(jumpSourceAddr)
+		return [ location >> 8, location & 0xff ]
+	}
+})
+
+ 
+
 global['compile'] = () => {
 	for (let addr = 0; addr < machineCode.length; addr += 1) {
-		if (machineCode[addr] instanceof Label) {
-			machineCode[addr] = machineCode[addr].resolve()
-		}
-		else if (typeof(machineCode[addr]) === 'string') {
+		//if (machineCode[addr] instanceof Label) {
+		//	machineCode[addr] = machineCode[addr].resolveShort(addr)
+		//}
+		if (typeof(machineCode[addr]) === 'string') {
 			machineCode[addr] = machineCode[addr].charCodeAt(0)
 		}
 	}
+	// resolve labels
+	sourceMap.forEach(({ addr, functionName, argCount }) => {
+		if (argCount >= 1) {
+			const firstArg = machineCode[addr + 1]
+			if (firstArg instanceof Label) {
+				const resolvedValues = functionArgumentResolvers[functionName](firstArg, addr + argCount)
+				machineCode.splice(addr + 1, argCount, ...resolvedValues)
+			}
+		}
+	})
+	// display source map
 	console.log(`SourceMap:`)
 	let sourceMapContent = ''
 	sourceMap.forEach(({ addr, functionName, argCount }) => {
@@ -88,6 +123,9 @@ global['compile'] = () => {
 		sourceMapContent += `${addrDisplay} : ${util.rightPad(valuesDisplay, 10, ' ')} // ${functionName}\n`
 	})
 	console.log(sourceMapContent)
+	if (machineCode.length > 0x100) {
+		console.log(`*** WARNING *** machineCode extends beyond 0xFF - naive short jumps will likely fail`)
+	}
 }
 
 function determineArgumentCountFromInstructionSignals(signals) {
