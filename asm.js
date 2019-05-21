@@ -41,18 +41,28 @@ function declareFunction(functionName, argCount, instructionCode) {
 
 // Labels
 
+let programOffset = 0
+
 const labelDict = {}
 class Label {
 	constructor(name) { this.name = name }
 	setHere() { this.location = machineCode.length }
-	resolveShort(jumpSourceAddr) {
+	getLocation() {
 		if (this.location === undefined) { throw new Error(`Label ${this.name} cannot be resolved because it was never setHere() to location in machinecode`) }
-		if (jumpSourceAddr >> 8 !== this.location >> 8) { throw new Error(`Label.resolveShort attempting to jump from outside of page!`) }
-		return this.location & 0xff
+		return programOffset + this.location
+	}
+	resolveShort(jumpSourceAddr) {
+		if (jumpSourceAddr >> 8 !== this.getLocation() >> 8) { throw new Error(`Label.resolveShort attempting to jump from outside of page!`) }
+		return this.getLocation() & 0xff
 	}
 	resolveLong() {
-		if (this.location === undefined) { throw new Error(`Label ${this.name} cannot be resolved because it was never setHere() to location in machinecode`) }
-		return this.location
+		return this.getLocation()
+	}
+	getLow() {
+		return this.getLocation() & 0xff
+	}
+	getHigh() {
+		return this.getLocation() >> 8
 	}
 }
 global['l'] = new Proxy(labelDict, {
@@ -74,10 +84,6 @@ global['________________'] = (label) => {
 
 // Compile
 
-function shortAddressResolver() {
-}
-function longAddressResolver() {
-}
 const functionArgumentResolvers = {}
 'jump JZ JNZ JC JNC JNK JNKA'.split(' ').forEach(functionName => {
 	functionArgumentResolvers[functionName] = (labelArg, jumpSourceAddr) => {
@@ -93,7 +99,8 @@ const functionArgumentResolvers = {}
 
  
 
-global['compile'] = () => {
+global['compile'] = (programOffset_) => {
+	programOffset = programOffset_
 	for (let addr = 0; addr < machineCode.length; addr += 1) {
 		//if (machineCode[addr] instanceof Label) {
 		//	machineCode[addr] = machineCode[addr].resolveShort(addr)
@@ -109,6 +116,12 @@ global['compile'] = () => {
 			if (firstArg instanceof Label) {
 				const resolvedValues = functionArgumentResolvers[functionName](firstArg, addr + argCount)
 				machineCode.splice(addr + 1, argCount, ...resolvedValues)
+			}
+		}
+		for (let i = 1; i <= argCount; i += 1) {
+			if (typeof machineCode[addr + i] === 'function') {
+				const resolvedValue = machineCode[addr + i](addr)
+				machineCode.splice(addr + i, 1, resolvedValue)
 			}
 		}
 	})

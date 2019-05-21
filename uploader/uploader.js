@@ -14,15 +14,15 @@ const resetInstruction = Symbol('resetInstruction')
 
 let port
 
-module.exports.upload = function(machineCode) {
+module.exports.upload = function(machineCode, interactiveModeWhenFinished = false) {
 
 	const buffer = [
 		resetInstruction,
-		//char('x'),      // select programming mode -- TODO: swap these and in bios
+		char('p'),      // select programming mode
 		...machineCode,
 		0xff,               // an extra byte to allow completion of the intervening instructions which write to ram for the good bytes before this one
 		resetInstruction,   // reset after keyboard buffer has finished being output to bus (but probably before the bios has a chance to write it to ram)
-		//char('p'),      // select execution mode -- TODO: swap these and in bios
+		char('x'),      // select execution mode
 	]
 
 	console.log('Waiting for "READY" from arduino!')
@@ -58,7 +58,7 @@ module.exports.upload = function(machineCode) {
 
 	function reset() {
 		console.log("Sending master reset request!")
-		port.write([ char('R'), char('!') ], (err) => {
+		port.write([ char('R') ], (err) => {
 			if (err) { console.log('Error on write: ', err.message); process.exit() }
 		})
 	}
@@ -79,7 +79,9 @@ module.exports.upload = function(machineCode) {
 			}
 		}
 		else {
-			startInteractiveMode()
+			if (interactiveModeWhenFinished) {
+				startInteractiveMode()
+			}
 		}
 	}
 
@@ -114,5 +116,6 @@ function startInteractiveMode() {
 		}
 	})
 }
+module.exports.startInteractiveMode = startInteractiveMode
 
 

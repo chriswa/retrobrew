@@ -84,7 +84,7 @@ function getInactiveControlSignals() {
  | KBD: Keyboard Read         | OUT: Display Out           | NXT: Next Instruction      |
  */
 const Instructions = {
-    noop:         { id: 0x00, signals: flags => [] },
+    noop:         { id: 0x00, signals: flags => ['MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT'] },
     aluToA:       { id: 0x20, idMax: 0x2f, signals: flags => ['SR AW FW'] }, // ALU! bottom 4 bits select ALU operation
     aluToB:       { id: 0x30, idMax: 0x3f, signals: flags => ['SR BW FW'] }, // ALU! bottom 4 bits select ALU operation
     cmp:          { id: 0x11, signals: flags => ['FW SR'] }, // ALU! bottom 4 bits select ALU operation, therefore subtract! SR is just for aesthetics
@@ -132,6 +132,9 @@ const Instructions = {
     BloadB:       { id: 0x08, signals: flags => ['BR DOW', 'MS MR BW'] },
     AstoreB:      { id: 0x16, signals: flags => ['AR DOW', 'BR MS MW'] },
     BstoreA:      { id: 0x17, signals: flags => ['BR DOW', 'AR MS MW'] },
+    ABloadA:      { id: 0x93, signals: flags => ['AR IOW', 'BR IPW', 'MS MR AW'] },
+    ABloadB:      { id: 0x94, signals: flags => ['AR IOW', 'BR IPW', 'MS MR BW'] },
+    storeTwo:     { id: 0x0a, signals: flags => ['MR AW II', 'MR DOW II', 'AR MS MW', 'MR AW II', 'MR DOW II', 'AR MS MW'] },
     iloadA:       { id: 0x09, signals: flags => ['MR DOW II', 'MS MR DOW', 'MS MR AW'] },
     istoreA:      { id: 0x19, signals: flags => ['MR DOW II', 'MS MR DOW', 'AR MS MW'] },
     iloadAFar:    { id: 0x8c, signals: flags => ['MR DPW II', 'MR DOW II', 'MS MR DOW', 'MS MR AW'] },

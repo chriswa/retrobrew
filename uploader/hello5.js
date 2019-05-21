@@ -4,8 +4,6 @@ require('../asm.js')
 const uploader = require('./uploader.js')
 const leftPad = util.leftPad
 
-const outerLabel = new Label()
-
 function print(str) { str.split('').forEach(c => output(c)) }
 
 lcdCtrl(0x01) // Clear
@@ -18,28 +16,26 @@ lcdCtrl(0xD4)
 print('      <3    <3      ')
 
 
-outerLabel.setHere()
+________________(l.outerLabel)
 
 lcdCtrl(0x94)
 print(' <3  I love you  <3 ')
 
 constA(255)
-const wait1 = new Label()
-wait1.setHere()
+________________(l.wait1)
 decA_into_A()
-JNZ(wait1)
+JNZ(l.wait1)
 
 
 lcdCtrl(0x94)
 print('<3   I love you   <3')
 
 constA(255)
-const wait2 = new Label()
-wait2.setHere()
+________________(l.wait2)
 decA_into_A()
-JNZ(wait2)
+JNZ(l.wait2)
 
-jump(outerLabel)
+jump(l.outerLabel)
 
 compile()
 

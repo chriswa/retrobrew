@@ -4,8 +4,6 @@ require('../asm.js')
 const uploader = require('./uploader.js')
 const leftPad = util.leftPad
 
-const outerLabel = new Label()
-const innerLabel = new Label()
 const VAR_X = 0
 
 // double incremented upon fetching instruction 01 (from previous instruction 4a) possibly due to current flag state?
@@ -30,13 +28,15 @@ output('d')
 output('!')
 constA(1)
 storeA(VAR_X)
-	outerLabel.setHere()
+
+________________(l.outerLabel)
 loadB(VAR_X)
 constA(0)
-	innerLabel.setHere()
+
+________________(l.innerLabel)
 add_into_A()
 //pause()
-JNC(innerLabel)
+JNC(l.innerLabel)
 outputB()
 constA(1)
 add_into_A()
@@ -45,7 +45,7 @@ add_into_A()
 //pause()
 //pause()
 storeA(VAR_X)
-jump(outerLabel)
+jump(l.outerLabel)
 
 compile()
 
