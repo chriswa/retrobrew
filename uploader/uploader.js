@@ -25,11 +25,11 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 		char('x'),      // select execution mode
 	]
 
-	console.log('Waiting for "READY" from arduino!')
+	//console.log('Waiting for "READY" from arduino!')
 
 	port = new SerialPort('COM4', { baudRate: 57600 })
 	port.on("open", () => {
-		console.log('serial port open')
+		//console.log('serial port open')
 		//nextStep()
 	})
 
@@ -37,19 +37,16 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 	parser.on('data', data => {
 		let matches
 		if (data === 'READY\r') {
-			console.log('<arduino> READY')
-			console.log('Arduino just powered up, starting to program...')
+			console.log('Programming...')
 			nextStep()
-		}
-		else if (matches = data.match(/^m: ([0-9A-F]{1,2})\r/)) {
-			const byte = parseInt(matches[1], 16)
-			const printable = (byte >= 32 && byte < 127) ? String.fromCharCode(byte) : '?'
-			console.log(`<arduino> MONITOR OUTPUT: 0x${util.leftPad(byte.toString(16), 2)}: ${printable}`)
 		}
 		else if (matches = data.match(/^k: ([0-9A-F]{1,2})\r/)) {
 			const byte = parseInt(matches[1], 16)
-			console.log(`<arduino> KEYBOARD READ: ${byte.toString(16)}: ${String.fromCharCode(byte)}`)
+			//console.log(`<arduino> KEYBOARD READ: ${byte.toString(16)}: ${String.fromCharCode(byte)}`)
 			nextStep()
+		}
+		else if (data.match(/^MASTER RESET /)) {
+			// noop
 		}
 		else {
 			console.log('<arduino> ' + data)
@@ -57,7 +54,7 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 	})
 
 	function reset() {
-		console.log("Sending master reset request!")
+		//console.log("Sending master reset request!")
 		port.write([ char('R') ], (err) => {
 			if (err) { console.log('Error on write: ', err.message); process.exit() }
 		})
@@ -72,7 +69,7 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 			}
 			else {
 				const nextByte = nextBufferElement
-				console.log(`Sending keyboard byte: 0x${util.leftPad(nextByte.toString(16), 2)}`)
+				//console.log(`Sending keyboard byte: 0x${util.leftPad(nextByte.toString(16), 2)}`)
 				port.write([char('k'), nextByte], (err) => {
 					if (err) { console.log('Error on write: ', err.message); process.exit() }
 				})
@@ -81,6 +78,10 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 		else {
 			if (interactiveModeWhenFinished) {
 				startInteractiveMode()
+			}
+			else {
+				//console.log('All done!')
+				process.exit(0)
 			}
 		}
 	}

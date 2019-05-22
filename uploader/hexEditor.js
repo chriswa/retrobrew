@@ -8,9 +8,17 @@ const VAR_ADDR_LOW = 0x80
 const VAR_ADDR_HIGH = 0x81
 const VAR_RETURN_LOW = 0x82
 const VAR_RETURN_HIGH = 0x83
-const VAR_HEXOUTPUTB_TEMP = 0x84
-//const VAR_STACK_PTR = 0x90
+const VAR_CURSOR_OFFSET = 0x84
+const VAR_CURSOR_ROW = 0x85
 
+function subroutineCall(innerCode) {
+	const tempLabel = new Label()
+	storeTwo(() => tempLabel.getLow(), VAR_RETURN_LOW, () => tempLabel.getHigh(), VAR_RETURN_HIGH)
+	innerCode()
+	tempLabel.setHere()
+}
+
+//const VAR_STACK_PTR = 0x90
 //function initStack() {
 //	constA(VAR_STACK_PTR + 1)
 //	storeA(VAR_STACK_PTR)
@@ -24,25 +32,25 @@ const VAR_HEXOUTPUTB_TEMP = 0x84
 lcd.clear()
 
 page(0xff)
-//initStack()
-constA(0x80)
-storeA(VAR_ADDR_HIGH)
+//constA(0x80)
 constA(0x00)
+storeA(VAR_ADDR_HIGH)
+constA(0xF8)
 storeA(VAR_ADDR_LOW)
 '0123456789ABCDEF'.split('').forEach((c, i) => { constA(c); storeA(VAR_HEX_ASCII_LOOKUP + i) })
 
 jumpFar(l.checkForInput, 0)
 
-________________(l.hexOutputB)
+________________(l.hexOutputA)
 {
-	shrB_into_A();shrA_into_A();shrA_into_A();shrA_into_A()
-	AloadA()
-	outputA()
+	shrA_into_B();shrB_into_B();shrB_into_B();shrB_into_B()
+	BloadB()
+	outputB()
 
-	constA(0x0F)
-	and_into_A()
-	AloadA()
-	outputA()
+	constB(0x0F)
+	and_into_B()
+	BloadB()
+	outputB()
 
 	loadA(VAR_RETURN_LOW)
 	loadB(VAR_RETURN_HIGH)
@@ -58,51 +66,133 @@ ________________(l.checkForInput)
 ________________(l.displayUI)
 
 
+
 // display address in hex
-{
-	lcd.moveCursor(0)
+lcd.moveCursor(0)
 
-	//constA(() => l.return1.getLow()); storeA(VAR_RETURN_LOW); constA(() => l.return1.getHigh()); storeA(VAR_RETURN_HIGH) // prepare to call function!
-	storeTwo(() => l.return1.getLow(), VAR_RETURN_LOW, () => l.return1.getHigh(), VAR_RETURN_HIGH)
-	loadB(VAR_ADDR_LOW)
-	jumpFar(l.hexOutputB, 0)
-	________________(l.return1)
+lcd.print('Memory at ')
 
-	//constA(() => l.return2.getLow()); storeA(VAR_RETURN_LOW); constA(() => l.return2.getHigh()); storeA(VAR_RETURN_HIGH) // prepare to call function!
-	storeTwo(() => l.return2.getLow(), VAR_RETURN_LOW, () => l.return2.getHigh(), VAR_RETURN_HIGH)
-	loadB(VAR_ADDR_HIGH)
-	jumpFar(l.hexOutputB, 0)
-	________________(l.return2)
-}
+subroutineCall(() => {
+	loadA(VAR_ADDR_HIGH)
+	jumpFar(l.hexOutputA, 0)
+})
+
+subroutineCall(() => {
+	loadA(VAR_ADDR_LOW)
+	jumpFar(l.hexOutputA, 0)
+})
+
+lcd.print(':')
 
 // display some memory values nearby
-{
-	lcd.moveCursor(1)
+lcd.moveCursor(1)
 
-	//constA(() => l.return3.getLow()); storeA(VAR_RETURN_LOW); constA(() => l.return3.getHigh()); storeA(VAR_RETURN_HIGH) // prepare to call function!
-	storeTwo(() => l.return3.getLow(), VAR_RETURN_LOW, () => l.return3.getHigh(), VAR_RETURN_HIGH)
+
+constA(0)
+storeA(VAR_CURSOR_ROW)
+storeA(VAR_CURSOR_OFFSET)
+
+________________(l.nextDisplayRow)
+________________(l.nextDisplayByte)
+subroutineCall(() => {
 	loadA(VAR_ADDR_LOW)
+	loadB(VAR_CURSOR_OFFSET)
+	add_into_A()
 	loadB(VAR_ADDR_HIGH)
-	halt()
-	ABloadB()
-	jumpFar(l.hexOutputB, 0)
-	________________(l.return3)
+	ABloadA()
+	page(0xff)
+	jumpFar(l.hexOutputA, 0)
+})
+loadA(VAR_CURSOR_OFFSET)
+constB(1)
+add_into_A()
+storeA(VAR_CURSOR_OFFSET)
+
+constB(1)
+and_into_B()
+JNZFar(l.skipSpace, 0)
+lcd.print(' ')
+________________(l.skipSpace)
+
+constB(0b111)
+and_into_B()
+JNZFar(l.nextDisplayByte, 0)
+
+//halt()
+
+loadA(VAR_CURSOR_ROW)
+constB(1)
+add_into_A()
+storeA(VAR_CURSOR_ROW)
+
+//halt()
+
+sub_into_A()
+JZFar(l.displayRowTwo, 0)
+sub_into_A()
+JZFar(l.displayRowThree, 0)
+
+jumpFar(l.editorUI, 0)
+
+________________(l.displayRowTwo)
+lcd.moveCursor(2)
+jumpFar(l.nextDisplayRow, 0)
+
+________________(l.displayRowThree)
+lcd.moveCursor(3)
+jumpFar(l.nextDisplayRow, 0)
 
 
-}
 
-halt()
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+________________(l.editorUI)
+
+constA(0)
+storeA(VAR_CURSOR_OFFSET)
+storeA(VAR_CURSOR_ROW)
+
+
+
+
+lcd.moveCursor(1)
+
+
+
+
+
+
+loadA(VAR_ADDR_LOW)
+constB(8)
+//constB(8 * 3)
+add_into_A()
+storeA(VAR_ADDR_LOW)
+
+JNCFar(l.doneIncrementingAddr, 0)
+loadA(VAR_ADDR_HIGH)
+constB(1)
+add_into_A()
+storeA(VAR_ADDR_HIGH)
+________________(l.doneIncrementingAddr)
+
+
+
+//constA(255)
+//________________(l.delay)
+//pause()
+//constB(1)
+//sub_into_A()
+//JNZFar(l.delay, 0)
+
+________________(l.waitForKeyboard)
+JNKFar(l.waitForKeyboard, 0)
+keyboardA()
 
 
 jumpFar(l.displayUI, 0)
-
-lcd.print("@")
-loadA(0)
-// TODO: output A in hex
-loadA(1)
-// TODO: output A in hex
-
-lcd.moveCursor(2)
 
 
 
@@ -110,6 +200,5 @@ lcd.moveCursor(2)
 compile(0x8000)
 
 if (!argv.dry) {
-	console.log('Uploading...')
 	uploader.upload(machineCode)
 }

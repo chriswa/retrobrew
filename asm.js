@@ -44,7 +44,7 @@ function declareFunction(functionName, argCount, instructionCode) {
 let programOffset = 0
 
 const labelDict = {}
-class Label {
+global['Label'] = class Label {
 	constructor(name) { this.name = name }
 	setHere() { this.location = machineCode.length }
 	getLocation() {
