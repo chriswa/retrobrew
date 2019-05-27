@@ -77,12 +77,18 @@ function getInactiveControlSignals() {
 }
 
 /*
- | AR: A Read                 | BR: B Read                 | SR: ALU Read               | MR: Memory Read            | MS: Memory Select (Data)   |
- | AW: A Write                | BW: B Write                | FW: ALU Flags Write        | MW: Memory Write           | IW: Instruction Write      |
- | II: InstAddr Increment     | IOR: InstAddr Offset Read  | IOW: InstAddr Offset Write | IPR: InstAddr Page Read    | IPW: InstAddr Page Write   |
- | DI: DataAddr Increment     | DOR: DataAddr Offset Read  | DOW: DataAddr Offset Write | DPR: DataAddr Page Read    | DPW: DataAddr Page Write   |
- | KBD: Keyboard Read         | OUT: Display Out           | NXT: Next Instruction      |
- */
+ === Bus Read (only 1) ===
+ | AR:  A Read                | BR:  B Read                | MR:  Memory Read           | SR:  ALU Read              |
+ | IOR: InstAddr Offset Read  | IPR: InstAddr Page Read    | DOR: DataAddr Offset Read  | DPR: DataAddr Page Read    | KBD: Keyboard Read         |
+
+ === Bus Write (only 1) ===
+ | AW:  A Write               | BW:  B Write               | MW:  Memory Write          | IW:  Instruction Write     |
+ | IOW: InstAddr Offset Write | IPW: InstAddr Page Write   | DOW: DataAddr Offset Write | DPW: DataAddr Page Write   | OUT: Display Out           |
+
+ === Other Control Signals ===
+ | MS:  Memory Select (Data)  | II:  InstAddr Increment    | DI:  DataAddr Increment    |
+ | NXT: Next Instruction      | FW:  ALU Flags Write       | LCD: LCD Control Mode      |
+*/
 const Instructions = {
     noop:         { id: 0x00, signals: flags => ['MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT'] },
     aluToA:       { id: 0x20, idMax: 0x2f, signals: flags => ['SR AW FW'] }, // ALU! bottom 4 bits select ALU operation

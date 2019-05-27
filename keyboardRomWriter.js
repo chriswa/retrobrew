@@ -46,19 +46,19 @@ function buildPairs() {
 	const breakCode = 0xF0
 	combinatoricsForBrkModShiftCtrlAlt((brk, mod, shift, ctrl, alt) => {
 		const input = new Input(breakCode, new State({ brk, mod, shift, ctrl, alt }))
-		const output = new Output(0, new State({ brk: true, mod, shift, ctrl, alt }), new Flags({ output: false }))
+		const output = new Output(0, new State({ brk: true, mod, shift, ctrl, alt }), new Flags({ output: false, reboot: false }))
 		pairCollection.addPair(input, output)
 	})
 	const modCode = 0xE0
 	combinatoricsForBrkModShiftCtrlAlt((brk, mod, shift, ctrl, alt) => {
 		const input = new Input(modCode, new State({ brk, mod, shift, ctrl, alt }))
-		const output = new Output(0, new State({ brk, mod: true, shift, ctrl, alt }), new Flags({ output: false }))
+		const output = new Output(0, new State({ brk, mod: true, shift, ctrl, alt }), new Flags({ output: false, reboot: false }))
 		pairCollection.addPair(input, output)
 	})
 	const resetCode = 0xAA
 	combinatoricsForBrkModShiftCtrlAlt((brk, mod, shift, ctrl, alt) => {
 		const input = new Input(resetCode, new State({ brk, mod, shift, ctrl, alt }))
-		const output = new Output(0, new State({ brk: false, mod: false, shift: false, ctrl: false, alt: false }), new Flags({ output: false }))
+		const output = new Output(0, new State({ brk: false, mod: false, shift: false, ctrl: false, alt: false }), new Flags({ output: false, reboot: false }))
 		pairCollection.addPair(input, output)
 	})
 
@@ -232,9 +232,10 @@ class State {
 	}
 }
 class Flags {
-	/** @param { { output: boolean } } obj */
-	constructor({ output }) {
+	/** @param { { output: boolean, reboot: boolean } } obj */
+	constructor({ output, reboot }) {
 		this.output = output
+		this.reboot = reboot
 	}
 }
 class Input {
@@ -309,7 +310,7 @@ function keyResultAlpha(lowerAscii, upperAscii) {
 			while (ascii < 0x00) { ascii += 256 } // clamp
 			while (ascii > 0xff) { ascii -= 256 } // clamp
 		}
-		return new Output(ascii, outputState, new Flags({ output: outputFlag }))
+		return new Output(ascii, outputState, new Flags({ output: outputFlag, reboot: false }))
 	}
 }
 /** @returns { (input: Input) => Output } */
@@ -319,7 +320,7 @@ function keyResultNone() {
 		const outputState = new State(input.state)
 		outputState.brk = false
 		outputState.mod = false
-		return new Output(0, outputState, new Flags({ output: false }))
+		return new Output(0, outputState, new Flags({ output: false, reboot: false }))
 	}
 }
 /** @returns { (input: Input) => Output } */
@@ -330,7 +331,30 @@ function keyResultToggleState(stateKey) {
 		outputState.brk = false
 		outputState.mod = false
 		outputState[stateKey] = !input.state.brk
-		return new Output(0, outputState, new Flags({ output: false }))
+		return new Output(0, outputState, new Flags({ output: false, reboot: false }))
+	}
+}
+/** @returns { (input: Input) => Output } */
+function keyResultCtrlAltDel(anycaseAscii) {
+	if (typeof(anycaseAscii) === 'string') { anycaseAscii = anycaseAscii.charCodeAt(0) }
+	/** @param { Input } input @returns { Output } */
+	return (input) => {
+		let ascii = anycaseAscii
+		let outputFlag = false
+		const outputState = new State(input.state)
+		outputState.brk = false
+		outputState.mod = false
+		if (!input.state.brk) {
+			if (input.state.ctrl && input.state.alt) {
+				return new Output(ascii, outputState, new Flags({ output: false, reboot: true }))
+			}
+				outputFlag = true
+			if (input.state.ctrl) { ascii += 0x80 }
+			if (input.state.alt) { ascii -= 81 }
+			while (ascii < 0x00) { ascii += 256 } // clamp
+			while (ascii > 0xff) { ascii -= 256 } // clamp
+		}
+		return new Output(ascii, outputState, new Flags({ output: outputFlag, reboot: false }))
 	}
 }
 
@@ -418,7 +442,7 @@ const keys = [
 	{ scancode: 0x70, mod: true,  result: keyResultAlpha(0x90, 0x90)    },  // make:E070              break:E0F070        label:Insert
 	{ scancode: 0x6C, mod: true,  result: keyResultAlpha(0x91, 0x91)    },  // make:E06C              break:E0F06C        label:Home
 	{ scancode: 0x7D, mod: true,  result: keyResultAlpha(0x92, 0x92)    },  // make:E07D              break:E0F07D        label:Page Up
-	{ scancode: 0x71, mod: true,  result: keyResultAlpha(0x93, 0x93)    },  // make:E071              break:E0F071        label:Delete
+	{ scancode: 0x71, mod: true,  result: keyResultCtrlAltDel(0x93)     },  // make:E071              break:E0F071        label:Delete
 	{ scancode: 0x69, mod: true,  result: keyResultAlpha(0x94, 0x94)    },  // make:E069              break:E0F069        label:End
 	{ scancode: 0x7A, mod: true,  result: keyResultAlpha(0x95, 0x95)    },  // make:E07A              break:E0F07A        label:Page Down
 	{ scancode: 0x75, mod: true,  result: keyResultAlpha(0x96, 0x96)    },  // make:E075              break:E0F075        label:Up Arrow
