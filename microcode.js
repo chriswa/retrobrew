@@ -35,14 +35,18 @@ class MuxedSignal extends BaseSignal {
         this.bitIndices = bitIndices
         this.muxId = muxId
     }
-    setInactive(controlRoms) {
-    }
-    setActive(controlRoms) {
-        let value = this.muxId
+    setValue(controlRoms, value) {
         for (let valueBit = 0; valueBit < this.bitIndices.length; valueBit += 1) {
-            controlRoms[this.romIndex] ^= moveBit(value & 0b1, 0, this.bitIndices[valueBit])
+            const bitValue = moveBit(1, 0, this.bitIndices[valueBit])
+            controlRoms[this.romIndex] = ((controlRoms[this.romIndex] | bitValue) ^ bitValue) | (value & 0b1 ? bitValue : 0) // unset, then set conditionally
             value >>= 1
         }
+    }
+    setInactive(controlRoms) {
+        this.setValue(controlRoms, 15)
+    }
+    setActive(controlRoms) {
+        this.setValue(controlRoms, this.muxId)
     }
 }
 
@@ -54,13 +58,17 @@ const Signals = {};
     if (token === 'xx') { return }
     addSignal(new NormalSignal(token, 0, index, false))
 })
+'TX TC TD xx xx xx xx xx'.split(' ').forEach((token, index) => {
+    if (token === 'xx') { return }
+    addSignal(new NormalSignal(token, 2, index, false))
+})
 const muxOutputOrder = [14, 13, 12, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-'KBD xx xx xx xx AR BR SR xx xx DPR IPR DOR IOR MR'.split(' ').forEach((token, index) => {
+'KBD TPR TOR xx CR AR BR SR xx xx DPR IPR DOR IOR MR'.split(' ').forEach((token, index) => {
     if (token === 'xx') { return }
     addSignal(new MuxedSignal(token, 1, [0, 1, 2, 3], muxOutputOrder[index]))
     //console.log(`MuxedSignal ${token} value is ${util.leftPad(value.toString(2), 4)}`)
 })
-'BW AW OUT xx xx xx xx xx IPW DPW IW IOW DOW MW xx'.split(' ').forEach((token, index) => {
+'BW AW OUT CW xx xx xx xx IPW DPW IW IOW DOW MW xx'.split(' ').forEach((token, index) => {
     if (token === 'xx') { return }
     addSignal(new MuxedSignal(token, 1, [7, 6, 5, 4], muxOutputOrder[index]))
     //console.log(`MuxedSignal ${token} value is ${util.leftPad(value.toString(2), 4)}`)
@@ -78,19 +86,23 @@ function getInactiveControlSignals() {
 
 /*
  === Bus Read (only 1) ===
- | AR:  A Read                | BR:  B Read                | MR:  Memory Read           | SR:  ALU Read              |
+ | AR:  A Read                | BR:  B Read                | CR:  C Read                | MR:  Memory Read           | SR:  ALU Read              |
  | IOR: InstAddr Offset Read  | IPR: InstAddr Page Read    | DOR: DataAddr Offset Read  | DPR: DataAddr Page Read    | KBD: Keyboard Read         |
+ | TPR: Stack High Read       | TOR: Stack Low Read        |
 
  === Bus Write (only 1) ===
- | AW:  A Write               | BW:  B Write               | MW:  Memory Write          | IW:  Instruction Write     |
+ | AW:  A Write               | BW:  B Write               | CW:  C Write               | MW:  Memory Write          | IW:  Instruction Write     |
  | IOW: InstAddr Offset Write | IPW: InstAddr Page Write   | DOW: DataAddr Offset Write | DPW: DataAddr Page Write   | OUT: Display Out           |
 
  === Other Control Signals ===
  | MS:  Memory Select (Data)  | II:  InstAddr Increment    | DI:  DataAddr Increment    |
  | NXT: Next Instruction      | FW:  ALU Flags Write       | LCD: LCD Control Mode      |
+ ----------------------------------------------------------------------------------------
+ | TX:  Stack Reset           | TC:  Stack Count           | TD:  Stack Decrement       |
 */
 const Instructions = {
     noop:         { id: 0x00, signals: flags => ['MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT', 'MR IW II NXT'] },
+    init:         { id: 0xaa, signals: flags => ['TX'] },
     aluToA:       { id: 0x20, idMax: 0x2f, signals: flags => ['SR AW FW'] }, // ALU! bottom 4 bits select ALU operation
     aluToB:       { id: 0x30, idMax: 0x3f, signals: flags => ['SR BW FW'] }, // ALU! bottom 4 bits select ALU operation
     cmp:          { id: 0x11, signals: flags => ['FW SR'] }, // ALU! bottom 4 bits select ALU operation, therefore subtract! SR is just for aesthetics
@@ -131,6 +143,10 @@ const Instructions = {
     lcdCtrlB:     { id: 0x76, signals: flags => ['BR OUT LCD'] },
     BmovA:        { id: 0x1c, signals: flags => ['BR AW'] },
     AmovB:        { id: 0x1d, signals: flags => ['AR BW'] },
+    BmovC:        { id: 0x10, signals: flags => ['BR CW'] },
+    AmovC:        { id: 0x12, signals: flags => ['AR CW'] },
+    CmovA:        { id: 0x15, signals: flags => ['CR AW'] },
+    CmovB:        { id: 0x18, signals: flags => ['CR BW'] },
     AswapB:       { id: 0x1e, signals: flags => ['AR DOW', 'BR AW', 'DOR AW'] },
     AloadA:       { id: 0x05, signals: flags => ['AR DOW', 'MS MR AW'] },
     AloadB:       { id: 0x06, signals: flags => ['AR DOW', 'MS MR BW'] },
@@ -145,6 +161,12 @@ const Instructions = {
     istoreA:      { id: 0x19, signals: flags => ['MR DOW II', 'MS MR DOW', 'AR MS MW'] },
     iloadAFar:    { id: 0x8c, signals: flags => ['MR DPW II', 'MR DOW II', 'MS MR DOW', 'MS MR AW'] },
     istoreAFar:   { id: 0x9c, signals: flags => ['MR DPW II', 'MR DOW II', 'MS MR DOW', 'AR MS MW'] },
+    pushA:        { id: 0x51, signals: flags => ['TPR DPW', 'TOR DOW', 'AR MW MS TC TD'] },
+    popA:         { id: 0x59, signals: flags => ['TC', 'TPR DPW', 'TOR DOW', 'MR MS AW'] },
+    pushB:        { id: 0x52, signals: flags => ['TPR DPW', 'TOR DOW', 'BR MW MS TC TD'] },
+    popB:         { id: 0x5a, signals: flags => ['TC', 'TPR DPW', 'TOR DOW', 'MR MS BW'] },
+    pushAB:       { id: 0x53, signals: flags => ['TPR DPW', 'TOR DOW', 'AR MW MS TC TD', 'TPR DPW', 'TOR DOW', 'BR MW MS TC TD'] },
+    popAB:        { id: 0x5b, signals: flags => ['TC', 'TPR DPW', 'TOR DOW', 'MR MS BW TC', 'TPR DPW', 'TOR DOW', 'MR MS AW'] },
     pause:        { id: 0xfd, signals: flags => ['AR', 'AR', 'AR', 'AR', 'AR', 'AR', 'AR'] },
     halt:         { id: 0xff, signals: flags => ['HLT'] },
 }

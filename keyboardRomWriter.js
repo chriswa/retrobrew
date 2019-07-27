@@ -209,7 +209,7 @@ class LogicChip {
 	getDataFromOutput(output) {
 		return bitsToNumber([
 			false,
-			false,
+			output.flags.reboot,
 			!output.flags.output,
 			output.state.alt,
 			output.state.ctrl,
