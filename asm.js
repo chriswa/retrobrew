@@ -4,7 +4,7 @@ const util = require('./util.js')
 
 for (let instructionName in microcode.Instructions) {
 	const instruction = microcode.Instructions[instructionName]
-	const argCount = determineArgumentCountFromInstructionSignals(instruction.signals)
+	const argCount = instructionName === 'noop' ? 0 : determineArgumentCountFromInstructionSignals(instruction.signals)
 	if (!instruction.idMax) {
 		const functionName = instructionName
 		declareFunction(functionName, argCount, instruction.id)
@@ -41,7 +41,7 @@ function declareFunction(functionName, argCount, instructionCode) {
 
 // Labels
 
-let programOffset = 0
+let programOffset
 
 const labelDict = {}
 global['Label'] = class Label {
@@ -101,6 +101,7 @@ const functionArgumentResolvers = {}
 
 global['compile'] = (programOffset_) => {
 	programOffset = programOffset_
+	if (programOffset === undefined) { programOffset = 0 }
 	for (let addr = 0; addr < machineCode.length; addr += 1) {
 		//if (machineCode[addr] instanceof Label) {
 		//	machineCode[addr] = machineCode[addr].resolveShort(addr)

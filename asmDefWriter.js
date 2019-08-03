@@ -8,7 +8,7 @@ console.log(`declare function compile(): void;`)
 
 for (let instructionName in microcode.Instructions) {
 	const instruction = microcode.Instructions[instructionName]
-	const argCount = determineArgumentCountFromInstructionSignals(instruction.signals)
+	const argCount = instructionName === 'noop' ? 0 : determineArgumentCountFromInstructionSignals(instruction.signals)
 	if (!instruction.idMax) {
 		const functionName = instructionName
 		declareFunction(functionName, argCount, instruction.id)

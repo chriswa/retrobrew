@@ -1,5 +1,6 @@
 module.exports = new class LCD {
 	init() {
+		pause()
 		this.clear()
 		lcdCtrl(0b00111000) // 8 bit communication, "two" (4) display lines
 		lcdCtrl(0x0f) // Display On, Cursor On, Blinking On

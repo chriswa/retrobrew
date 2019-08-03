@@ -2,6 +2,7 @@ const asm = require('./asm.js')
 const lcd = require('./lcd.js')
 
 noop()
+init()
 lcd.init()
 JNK(l.showMenu)
 
