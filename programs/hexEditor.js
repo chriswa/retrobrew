@@ -1,5 +1,3 @@
-const argv = require('minimist')(process.argv.slice(2))
-const uploader = require('./uploader.js')
 const asm = require('../asm.js')
 const lcd = require('../lcd.js')
 
@@ -194,11 +192,3 @@ keyboardA()
 
 jumpFar(l.displayUI, 0)
 
-
-
-
-compile(0x8000)
-
-if (!argv.dry) {
-	uploader.upload(machineCode)
-}

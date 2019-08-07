@@ -97,9 +97,12 @@ const functionArgumentResolvers = {}
 	}
 })
 
- 
 
+let alreadyCompiled = false
 global['compile'] = (programOffset_) => {
+	if (alreadyCompiled) { throw new Error('already compiled!') }
+	alreadyCompiled = true
+
 	programOffset = programOffset_
 	if (programOffset === undefined) { programOffset = 0 }
 	for (let addr = 0; addr < machineCode.length; addr += 1) {

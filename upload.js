@@ -1,8 +1,23 @@
+const argv = require('minimist')(process.argv.slice(2))
+const romWriter = require('./romWriter.js')
 const SerialPort = require('serialport')
 const Readline = require('@serialport/parser-readline')
-const util = require('../util.js')
+const util = require('./util.js')
 
 const resetInstruction = Symbol('resetInstruction')
+
+const script = argv._[0]
+if (script === undefined) {
+	throw new Error(`first argument (script) must be defined`)
+}
+
+console.log(script)
+require('./' + script)
+
+compile()
+
+console.log(`machineCode.length = ${machineCode.length.toString(16)}`)
+
 
 //let buffer = [
 //	// hello2, adjusted to use ram page 0x81 for data storage
@@ -14,7 +29,7 @@ const resetInstruction = Symbol('resetInstruction')
 
 let port
 
-module.exports.upload = function(machineCode, interactiveModeWhenFinished = false) {
+function upload(machineCode, interactiveModeWhenFinished = false) {
 
 	const buffer = [
 		resetInstruction,
@@ -25,11 +40,11 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 		char('x'),      // select execution mode
 	]
 
-	//console.log('Waiting for "READY" from arduino!')
+	console.log('Waiting for "READY" from arduino!')
 
 	port = new SerialPort('COM4', { baudRate: 57600 })
 	port.on("open", () => {
-		//console.log('serial port open')
+		console.log('serial port open')
 		//nextStep()
 	})
 
@@ -42,7 +57,7 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 		}
 		else if (matches = data.match(/^k: ([0-9A-F]{1,2})\r/)) {
 			const byte = parseInt(matches[1], 16)
-			//console.log(`<arduino> KEYBOARD READ: ${byte.toString(16)}: ${String.fromCharCode(byte)}`)
+			console.log(`<arduino> KEYBOARD READ: ${byte.toString(16)}: ${String.fromCharCode(byte)}`)
 			nextStep()
 		}
 		else if (data.match(/^MASTER RESET /)) {
@@ -54,7 +69,7 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 	})
 
 	function reset() {
-		//console.log("Sending master reset request!")
+		console.log("Sending master reset request!")
 		port.write([ char('R') ], (err) => {
 			if (err) { console.log('Error on write: ', err.message); process.exit() }
 		})
@@ -69,7 +84,7 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 			}
 			else {
 				const nextByte = nextBufferElement
-				//console.log(`Sending keyboard byte: 0x${util.leftPad(nextByte.toString(16), 2)}`)
+				console.log(`Sending keyboard byte: 0x${util.leftPad(nextByte.toString(16), 2)}`)
 				port.write([char('k'), nextByte], (err) => {
 					if (err) { console.log('Error on write: ', err.message); process.exit() }
 				})
@@ -80,7 +95,7 @@ module.exports.upload = function(machineCode, interactiveModeWhenFinished = fals
 				startInteractiveMode()
 			}
 			else {
-				//console.log('All done!')
+				console.log('All done!')
 				process.exit(0)
 			}
 		}
@@ -119,4 +134,6 @@ function startInteractiveMode() {
 }
 module.exports.startInteractiveMode = startInteractiveMode
 
+
+upload(machineCode)
 
