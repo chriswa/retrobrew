@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/chriswa/retrobrew#readme",
   "dependencies": {
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.2",
     "serialport": "^7.1.4"
   }
 }
